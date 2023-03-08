@@ -1,0 +1,64 @@
+# READ ME!!! 
+#
+# This is an Azure DevOps terraform pipeline example, which is *almost* ready to use. 
+# 
+# What this pipeline does:
+# This pipeline runs on pushes to master, and deploys to all environments specified in "environments" parameter.
+#
+# What you NEED to do before using it: 
+# 1. Address all comments starting with "ADJUST"
+# 2. If you've setup everything using ET automations, everything else should work out-of-the-box. 
+#    If not, refer to README and adjust your variable groups, backend, etc. accordingly.
+#
+# You can use the "optional" comments to simplify or customize this pipeline.
+
+pr: none
+trigger: none
+
+parameters:
+  - name: environments
+    type: object
+    default: ["dev", "tst", "acc"]
+
+variables:
+  repositoryName: ${{ split(variables['Build.Repository.Name'], '/')[1] }}
+  tfFolder: terraform # ADJUST: set to your terraform directory
+  tfVersion: latest # ADJUST: set to your tf version
+
+pool:
+  vmImage: ubuntu-latest
+
+resources:
+  repositories:
+    - repository: PipelineTemplates
+      name: jumbo-supermarkten/ado-pipeline-templates
+      ref: v2/add-terraform-configure-template # ADJUST: set the desired version
+      type: github
+      endpoint: (DO NOT REMOVE) GitHub Service Connection
+
+stages:
+  - template: templates/validate-plan-apply.yml@PipelineTemplates
+    parameters:
+      environments: ${{ parameters.environments }}
+      tfFormat: true
+      tfLint: true
+      tfSec: true
+      tfValidate: true
+      tfFolder: ${{ variables.tfFolder }}
+      tfVersion: ${{ variables.tfVersion }}
+      tfApply: true 
+      tfAuthVariables: # optional; if omitted, uses the default below
+        - ARM_CLIENT_ID: $(contributor-app-registration-id)
+        - ARM_CLIENT_SECRET: $(contributor-service-principal-secret)
+        - ARM_SUBSCRIPTION_ID: $(subscription-id)
+        - ARM_TENANT_ID: $(tenant-id)
+      tfBackendConfig: 
+        - storage_account_name: $(workload-tfstate-storage-account-name)
+        - sas_token: $(workload-tfstate-container-sas)
+        - container_name: $(workload-tfstate-container-name)
+        - key: ${{ variables.repositoryName }}.tfstate
+      tfEnvVariables: # optional; use it if you need to send in your own custom Terraform variables
+        - TF_VAR_my_custom_variable_1: my_custom_value_1
+        - TF_VAR_my_custom_variable_2: my_custom_value_2
+      variableGroupPrefixes: # optional; if omitted, uses the default below
+        - Terraform Vars
