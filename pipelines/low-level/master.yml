@@ -40,7 +40,7 @@ resources:
   repositories:
     - repository: PipelineTemplates
       name: jumbo-supermarkten/ado-pipeline-templates
-      ref: v2/add-terraform-configure-template # ADJUST: set the desired version
+      ref: refs/tags/v0.0.1 # ADJUST: set the desired version
       type: github
       endpoint: (DO NOT REMOVE) GitHub Service Connection
 

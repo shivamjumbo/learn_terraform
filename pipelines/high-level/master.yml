@@ -12,8 +12,11 @@
 #
 # You can use the "optional" comments to simplify or customize this pipeline.
 
+trigger:
+  branches:
+    include:
+      - master 
 pr: none
-trigger: none
 
 parameters:
   - name: environments
@@ -32,7 +35,7 @@ resources:
   repositories:
     - repository: PipelineTemplates
       name: jumbo-supermarkten/ado-pipeline-templates
-      ref: v2/add-terraform-configure-template # ADJUST: set the desired version
+      ref: refs/tags/v0.0.1 # ADJUST: set the desired version
       type: github
       endpoint: (DO NOT REMOVE) GitHub Service Connection
 
