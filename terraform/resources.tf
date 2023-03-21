@@ -2,32 +2,55 @@ locals {
   common_tags = {
     "ApplicationName"  = "AzDevOpsTestSetup",
     "Environment"      = var.environment,
-    "TeamName"         = "ET",
-    "Project_Change"   = "CE-1715",
-    "TeamContactMail"  = "enablement@jumbo.com",
+    "TeamName"         = "APSLM",
+    "TeamContactMail"  = "apslastmile@jumbo.com",
+    "Project_Change"   = "APSLM-917",
     "TerraformManaged" = "true",
     "Description"      = "Testing Azure DevOps pipelines and setup"
   }
 }
 
 resource "azurerm_resource_group" "azure_devops_test_setup" {
-  name     = "azure-devops-test-setup"
+  name     = "servicebus-dev-aps-rg"
   location = "westeurope"
 
   tags = local.common_tags
 }
 
+resource "azurerm_servicebus_namespace" "test_service_bus_namespace" {
+  name                = "sap-adapter-orders-${var.environment}"
+  location            = azurerm_resource_group.azure_devops_test_setup.location
+  resource_group_name = azurerm_resource_group.azure_devops_test_setup.name
+  sku                 = "Standard"
 
-resource "azurerm_storage_account" "test_setup_storage" {
-  name                            = "azdevopstestsetup${var.environment}abc"
-  resource_group_name             = azurerm_resource_group.azure_devops_test_setup.name
-  location                        = azurerm_resource_group.azure_devops_test_setup.location
-  account_tier                    = "Standard"
-  account_replication_type        = "LRS"
-  allow_nested_items_to_be_public = false # policy
-
-  tags = local.common_tags # policy
+  tags = local.common_tags
 }
+
+resource "azurerm_servicebus_queue" "service_bus_queue" {
+  name         = "sap-adapter-orders-${var.environment}-sbq-tos"
+  namespace_id = azurerm_servicebus_namespace.test_service_bus_namespace.id
+
+  enable_partitioning = true
+}
+
+# resource "azurerm_resource_group" "azure_devops_test_setup" {
+#   name     = "azure-devops-test-setup"
+#   location = "westeurope"
+
+#   tags = local.common_tags
+# }
+
+
+# resource "azurerm_storage_account" "test_setup_storage" {
+#   name                            = "azdevopstestsetup${var.environment}abc"
+#   resource_group_name             = azurerm_resource_group.azure_devops_test_setup.name
+#   location                        = azurerm_resource_group.azure_devops_test_setup.location
+#   account_tier                    = "Standard"
+#   account_replication_type        = "LRS"
+#   allow_nested_items_to_be_public = false # policy
+
+#   tags = local.common_tags # policy
+# }
 
 
 # this will fail, but goal is to see if its accessible
